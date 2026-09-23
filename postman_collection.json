@@ -1,0 +1,287 @@
+{
+  "info": {
+    "_postman_id": "9f18a221-5a3d-4c3e-90f1-7c98127390b1",
+    "name": "Support Ticket Management System API",
+    "description": "Comprehensive Postman collection for Support Ticket Management System assessment covering Authentication, Role-Based Access Control, Ticket Lifecycle, Comments, and Error Scenarios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "customerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "agentToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "ticketId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "Register Customer (POST /auth/register)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Customer\",\n  \"email\": \"customer.new@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth", "register"] }
+          }
+        },
+        {
+          "name": "Customer Login (POST /auth/login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "  pm.collectionVariables.set('customerToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice.johnson@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Agent Login (POST /auth/login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.token) {",
+                  "  pm.collectionVariables.set('agentToken', jsonData.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"agent.sarah@supportpro.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Invalid Login - Wrong Password (401)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"alice.johnson@example.com\",\n  \"password\": \"WrongPassword!\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] }
+          }
+        },
+        {
+          "name": "Get Authenticated Profile (GET /auth/me)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Ticket Management",
+      "item": [
+        {
+          "name": "Get Tickets List (GET /tickets)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+          }
+        },
+        {
+          "name": "Create Ticket (POST /tickets)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"Postman Test: Payment Gateway Error\",\n  \"description\": \"Encountering connection timeout on checkout step 3.\",\n  \"priority\": \"high\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+          }
+        },
+        {
+          "name": "Get Ticket by ID (GET /tickets/:id)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets/1", "host": ["{{baseUrl}}"], "path": ["tickets", "1"] }
+          }
+        },
+        {
+          "name": "Agent Update Ticket Status & Assignment (PUT /tickets/:id)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agentToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"priority\": \"urgent\",\n  \"assigned_to\": 2\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets/1", "host": ["{{baseUrl}}"], "path": ["tickets", "1"] }
+          }
+        },
+        {
+          "name": "Agent Delete Ticket (DELETE /tickets/:id)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agentToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets/1", "host": ["{{baseUrl}}"], "path": ["tickets", "1"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Comments & Responses",
+      "item": [
+        {
+          "name": "Get Comments for Ticket (GET /tickets/:id/comments)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets/2/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "2", "comments"] }
+          }
+        },
+        {
+          "name": "Customer Add Comment (POST /tickets/:id/comments)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Customer follow-up: Please let me know when this can be reviewed.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets/2/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "2", "comments"] }
+          }
+        },
+        {
+          "name": "Agent Post Response (POST /tickets/:id/comments)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{agentToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"comment\": \"Agent Response: The issue is currently being resolved by our team.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets/2/comments", "host": ["{{baseUrl}}"], "path": ["tickets", "2", "comments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Agents Directory",
+      "item": [
+        {
+          "name": "Get Support Agents List (GET /users)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{agentToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Error & Security Scenarios",
+      "item": [
+        {
+          "name": "401 - Unauthorized Request (Missing Token)",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+          }
+        },
+        {
+          "name": "403 - Customer Accessing Agent Endpoint (GET /users)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/users", "host": ["{{baseUrl}}"], "path": ["users"] }
+          }
+        },
+        {
+          "name": "403 - Customer Accessing Another Customer's Ticket",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets/3", "host": ["{{baseUrl}}"], "path": ["tickets", "3"] }
+          }
+        },
+        {
+          "name": "400 - Invalid Input (Missing Required Fields)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{customerToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subject\": \"ab\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/tickets", "host": ["{{baseUrl}}"], "path": ["tickets"] }
+          }
+        },
+        {
+          "name": "404 - Not Found Ticket (GET /tickets/99999)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{customerToken}}" }],
+            "url": { "raw": "{{baseUrl}}/tickets/99999", "host": ["{{baseUrl}}"], "path": ["tickets", "99999"] }
+          }
+        }
+      ]
+    }
+  ]
+}
